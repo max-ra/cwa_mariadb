@@ -32,7 +32,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    user: mysql
     secrets:
       - source: mdb_exporter_pw
         uid: "999"
