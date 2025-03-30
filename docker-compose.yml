@@ -1,0 +1,61 @@
+networks:
+  monitoring:
+    name: backbone_monitoring
+    external: true
+  database:
+    name: backbone_database
+    external: true
+
+secrets:
+  mdb_admin_pw:
+    environment: MDB_DB_PASS
+  mdb_exporter_pw:
+    environment: MDB_EXPORTER_PASS
+
+services:
+  mariadb:
+    image: mariadb:10.11.11
+    container_name: mariadb 
+    restart: always
+    volumes:
+      - "./mariadb/data:/var/lib/mysql:Z"
+      - "./mariadb/initdb.d:/custom-entrypoint-initdb.d:Z"
+    environment:
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mdb_admin_pw
+    post_start:
+      - command: /custom-entrypoint-initdb.d/configur_exporter.sh
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    user: mysql
+    secrets:
+      - source: mdb_exporter_pw
+        uid: "999"
+      - source: mdb_admin_pw
+        uid: "999"
+    ports:
+      - 3306:3306
+    command:
+      - --skip-name-resolve=OFF
+  mariadb-mon:
+    image: prom/mysqld-exporter:v0.17.2
+    container_name: mariadb-mon
+    restart: always
+    command:
+      - --mysqld.username=exporter
+      - --mysqld.address=mariadb:3306
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: "${MDB_EXPORTER_PASS}"
+    labels:
+      - prometheus.scrape=true
+      - prometheus.port=9104
+      - prometheus.job=mariadb
+      - prometheus.host=${APPLICATION_FQDN:-}
+    networks:
+      - monitoring
+      - database
