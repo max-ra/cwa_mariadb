@@ -37,8 +37,6 @@ services:
         uid: "999"
       - source: mdb_admin_pw
         uid: "999"
-    ports:
-      - 3306:3306
     command:
       - --skip-name-resolve=OFF
   mariadb-mon:
