@@ -1,6 +1,4 @@
-# cwa_PostgreSQL
-
-container web application database provider postgresql- Mainfranken Racing basis system. Will provide database storage.
+# cwa_mariadb
 
 This compose configuration automaticaly adds prometheus exporter. For that a user **'exporter'@'mariadb-mon.backbone_database'** will be created. A script started after the server is boote will performe the neccesary changes.
 
